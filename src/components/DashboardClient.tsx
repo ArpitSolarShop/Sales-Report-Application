@@ -78,7 +78,19 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
     const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
     const [syncInput, setSyncInput] = useState("");
     const [currentDate, setCurrentDate] = useState("");
-    const [selectedMonth, setSelectedMonth] = useState<string>("All");
+
+    const initialMonths = useMemo(() => {
+        const months = new Set<string>();
+        initialRecords.forEach(item => {
+            const d = new Date(item.date);
+            if(!isNaN(d.getTime())) {
+                months.add(d.toLocaleString('default', { month: 'long', year: 'numeric' }));
+            }
+        });
+        return Array.from(months).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+    }, [initialRecords]);
+
+    const [selectedMonth, setSelectedMonth] = useState<string>(initialMonths[0] || "All");
 
     const availableMonths = useMemo(() => {
         const months = new Set<string>();
@@ -207,8 +219,19 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
     const peakDateStr = stats.timeline.length ? [...stats.timeline].sort((a,b) => b.revenue - a.revenue)[0].date : 'N/A';
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-blue-100 pb-20 print:bg-white print:p-0 print:pb-0">
-            <main className="max-w-7xl mx-auto p-4 md:p-6 space-y-6 print:space-y-4 print:p-4 print:max-w-none">
+        <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-blue-100 pb-20 print:bg-slate-50 print:p-0 print:pb-0">
+            <style dangerouslySetInnerHTML={{__html: `
+                @media print {
+                    @page { size: landscape; margin: 10mm; }
+                    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                    /* Force layout retention for print */
+                    .lg\\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+                    .lg\\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+                    .lg\\:col-span-2 { grid-column: span 2 / span 2 !important; }
+                    .print\\:hidden { display: none !important; }
+                }
+            `}} />
+            <main className="max-w-7xl mx-auto p-4 md:p-6 space-y-6 print:space-y-6 print:p-4 print:max-w-none">
                 
                 {/* Header */}
                 <header className="flex flex-col lg:flex-row lg:justify-between lg:items-end gap-6 border-b-[3px] border-slate-900 pb-6 mb-8 pt-2 print:pt-0 print:pb-4 print:mb-6">
