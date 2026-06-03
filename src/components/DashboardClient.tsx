@@ -256,6 +256,7 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
                 @media print {
                     @page { size: landscape; margin: 10mm; }
                     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                    .bg-white { break-inside: avoid; page-break-inside: avoid; }
                     /* Force layout retention for print */
                     .lg\\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
                     .lg\\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
@@ -425,7 +426,7 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
                 </div>
 
                 {/* Charts Row */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 print:gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 print:gap-4 items-start">
                     <div className="lg:col-span-2 space-y-6 print:space-y-4">
                         
                         {/* Timeline */}
