@@ -236,7 +236,7 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
                 {/* Header */}
                 <header className="flex flex-col lg:flex-row lg:justify-between lg:items-end gap-6 border-b-[3px] border-slate-900 pb-6 mb-8 pt-2 print:pt-0 print:pb-4 print:mb-6">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
-                        <img src="/logo.png" alt="Krishnanuja Renewables" className="h-16 sm:h-20 w-auto object-contain print:h-14 drop-shadow-sm" />
+                        <img src="/krishnanuja.png" alt="Krishnanuja Renewables" className="h-16 sm:h-20 w-auto object-contain print:h-14 drop-shadow-sm" />
                         <div>
                             <div className="flex items-center gap-2 mb-2 print:mb-1">
                                 <Zap className="text-blue-600 print:text-slate-800 w-5 h-5" />
