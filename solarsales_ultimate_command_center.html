@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SolarSales Ultimate Command Center</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js for Visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Chart.js DataLabels Plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+        
+        /* Print Styles */
+        @media print {
+            @page { size: A4; margin: 10mm; }
+            body { -webkit-print-color-adjust: exact; background-color: white !important; }
+            .min-h-screen { min-height: auto !important; }
+            .max-w-7xl { max-width: none !important; }
+            .shadow-sm, .shadow-md, .shadow-lg, .shadow-xl, .shadow-2xl {
+                box-shadow: none !important;
+                border: 1px solid #f1f5f9 !important;
+            }
+            .custom-scrollbar { max-height: none !important; overflow: visible !important; }
+            .print\:max-h-none { max-height: none !important; }
+            .print\:overflow-visible { overflow: visible !important; }
+            
+            tr { page-break-inside: avoid; }
+            .bg-white { background-color: white !important; }
+            .bg-slate-50 { background-color: #f8fafc !important; }
+            .print\:hidden { display: none !important; }
+            .print\:bg-white { background-color: white !important; }
+            .print\:p-0 { padding: 0 !important; }
+            .print\:pb-0 { padding-bottom: 0 !important; }
+            .print\:space-y-4 > * + * { margin-top: 1rem !important; }
+            .print\:max-w-none { max-width: none !important; }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-blue-100 pb-20 print:bg-white print:p-0 print:pb-0">
+
+    <main class="max-w-7xl mx-auto p-6 space-y-6 print:space-y-4 print:p-4 print:max-w-none">
+        
+        <!-- Unified Report Header -->
+        <header class="flex justify-between items-end border-b-[3px] border-slate-900 pb-6 mb-8 pt-2 print:pt-0 print:pb-4 print:mb-6">
+            <div>
+                <div class="flex items-center gap-2 mb-2 print:mb-1">
+                    <i data-lucide="zap" class="text-blue-600 print:text-slate-800 w-5 h-5"></i>
+                    <span class="text-xs print:text-[10px] font-black text-blue-700 print:text-slate-600 uppercase tracking-widest bg-blue-50 print:bg-transparent print:px-0 px-2 py-1 rounded-md">
+                        Data Zone: Verified Audit (<span id="header-total-records">83</span> Records)
+                    </span>
+                </div>
+                <h1 class="text-3xl print:text-2xl font-black uppercase tracking-tighter text-slate-900">
+                    SolarSales Executive Summary
+                </h1>
+            </div>
+            
+            <div class="text-right">
+                <p class="text-sm print:text-xs font-black uppercase text-slate-800">Report Date: May 2026</p>
+                <p class="text-xs print:text-[10px] text-slate-500 font-medium mt-0.5">Generated: <span id="current-date"></span></p>
+                
+                <!-- Action Buttons (Hidden on print) -->
+                <div class="flex items-center gap-2 mt-4 print:hidden justify-end">
+                    <button id="btn-clear-filter" onclick="clearFilter()" class="hidden text-xs font-bold text-blue-600 bg-blue-50 px-3 py-2 rounded-xl border border-blue-100 items-center gap-1 hover:bg-blue-100">
+                        Clear Filter: <span id="lbl-selected-rep"></span>
+                    </button>
+                    <div class="relative hidden md:block">
+                        <i data-lucide="search" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 w-3.5 h-3.5"></i>
+                        <input type="text" id="search-input" onkeyup="handleSearch()" placeholder="Search logs..." class="pl-8 pr-3 py-2 bg-slate-100 border-none rounded-xl text-xs w-36 focus:ring-2 focus:ring-blue-500 transition-all outline-none">
+                    </div>
+                    <button onclick="window.print()" class="bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-slate-800 shadow-md transition-transform active:scale-95">
+                        <i data-lucide="printer" class="w-3.5 h-3.5"></i> Print PDF
+                    </button>
+                    <button onclick="document.getElementById('sync-modal').classList.remove('hidden')" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-blue-700 shadow-md transition-transform active:scale-95">
+                        <i data-lucide="database" class="w-3.5 h-3.5"></i> Sync Data
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Target Milestone & High-Level Pulse -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 print:gap-4">
+            <div class="lg:col-span-2 bg-white p-8 print:p-6 rounded-[2.5rem] print:rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden group">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full -translate-y-1/2 translate-x-1/2 opacity-50 group-hover:scale-110 transition-transform duration-700 print:hidden"></div>
+                <div class="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <div class="flex items-center gap-2 mb-2">
+                            <i data-lucide="target" class="text-blue-600 w-4 h-4"></i>
+                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Revenue Milestone Tracking</span>
+                        </div>
+                        <h2 class="text-4xl print:text-3xl font-black text-slate-900 tracking-tight" id="val-total-revenue">₹0</h2>
+                        <p class="text-slate-500 mt-2 text-sm font-medium print:mt-1">Currently at <span class="text-blue-600 font-bold" id="val-progress-text">0%</span> of monthly goal (₹1.2 Cr)</p>
+                        <div class="mt-6 w-full bg-slate-100 h-4 rounded-full overflow-hidden p-0.5 border border-slate-200">
+                            <div id="val-progress-bar" class="bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-600 h-full rounded-full transition-all duration-1000 shadow-sm" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-4 print:gap-2">
+                        <div class="bg-slate-50 p-4 print:p-3 rounded-2xl border border-slate-100 flex justify-between items-center">
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Month Deals</p>
+                                <p class="text-2xl print:text-xl font-black text-slate-800" id="val-global-deals">0</p>
+                            </div>
+                            <i data-lucide="users" class="text-blue-300 w-8 h-8 print:w-6 print:h-6"></i>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 print:gap-2">
+                            <div class="bg-slate-50 p-4 print:p-3 rounded-2xl border border-slate-100">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Peak Date</p>
+                                <p class="text-sm font-black text-slate-800 truncate" id="val-peak-date">N/A</p>
+                            </div>
+                            <div class="bg-slate-50 p-4 print:p-3 rounded-2xl border border-slate-100">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Avg kW</p>
+                                <p class="text-sm font-black text-slate-800 truncate" id="val-avg-kw">0 kW</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white p-8 print:p-6 rounded-[2.5rem] print:rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center">
+                <div class="flex items-center gap-2 mb-4 print:mb-2">
+                    <i data-lucide="star" class="text-amber-500 w-4 h-4"></i>
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Global Top Performer</span>
+                </div>
+                <p class="text-2xl print:text-xl font-black tracking-tight text-slate-800" id="val-top-name">N/A</p>
+                <div class="mt-4 flex justify-between items-end border-t border-slate-50 pt-4 print:mt-2 print:pt-2">
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Revenue</p>
+                        <p class="text-sm font-black text-blue-600" id="val-top-rev">₹0</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Deals</p>
+                        <p class="text-sm font-black text-slate-800" id="val-top-deals">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI Strip -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 print:gap-4">
+            <div class="bg-white p-4 print:p-3 rounded-2xl border border-slate-100 shadow-sm transition-all flex items-center gap-4">
+                <div class="bg-blue-100/50 text-blue-600 w-10 h-10 rounded-xl flex items-center justify-center shrink-0">
+                    <i data-lucide="dollar-sign" class="w-4 h-4"></i>
+                </div>
+                <div>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Revenue Pulse</p>
+                    <h3 class="text-lg print:text-base font-black tracking-tight" id="kpi-revenue">₹0</h3>
+                </div>
+            </div>
+            <div class="bg-white p-4 print:p-3 rounded-2xl border border-slate-100 shadow-sm transition-all flex items-center gap-4">
+                <div class="bg-emerald-100/50 text-emerald-600 w-10 h-10 rounded-xl flex items-center justify-center shrink-0">
+                    <i data-lucide="package" class="w-4 h-4"></i>
+                </div>
+                <div>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Energy Load</p>
+                    <h3 class="text-lg print:text-base font-black tracking-tight" id="kpi-capacity">0 kW</h3>
+                </div>
+            </div>
+            <div class="bg-white p-4 print:p-3 rounded-2xl border border-slate-100 shadow-sm transition-all flex items-center gap-4">
+                <div class="bg-violet-100/50 text-violet-600 w-10 h-10 rounded-xl flex items-center justify-center shrink-0">
+                    <i data-lucide="trending-up" class="w-4 h-4"></i>
+                </div>
+                <div>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Efficiency</p>
+                    <h3 class="text-lg print:text-base font-black tracking-tight" id="kpi-efficiency">₹0</h3>
+                </div>
+            </div>
+            <div class="bg-white p-4 print:p-3 rounded-2xl border border-slate-100 shadow-sm transition-all flex items-center gap-4">
+                <div class="bg-orange-100/50 text-orange-600 w-10 h-10 rounded-xl flex items-center justify-center shrink-0">
+                    <i data-lucide="zap" class="w-4 h-4"></i>
+                </div>
+                <div>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Avg Ticket</p>
+                    <h3 class="text-lg print:text-base font-black tracking-tight" id="kpi-ticket">₹0</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 print:gap-4">
+            <div class="lg:col-span-2 space-y-6 print:space-y-4">
+                
+                <!-- Timeline -->
+                <div class="bg-white p-6 print:p-4 rounded-2xl border border-slate-100 shadow-sm h-[300px] print:h-[220px] flex flex-col">
+                    <h3 class="text-sm font-bold flex items-center gap-2 mb-2 uppercase tracking-wider text-slate-400 shrink-0">
+                        <i data-lucide="activity" class="text-blue-500 w-4 h-4"></i> Revenue Flux
+                    </h3>
+                    <div class="flex-1 relative w-full h-full">
+                        <canvas id="timelineChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-6 print:gap-4">
+                    <div class="bg-white p-6 print:p-4 rounded-2xl border border-slate-100 shadow-sm h-[200px] print:h-[150px] flex flex-col">
+                        <h3 class="text-[10px] font-black mb-2 flex items-center gap-2 text-slate-400 uppercase tracking-widest shrink-0">
+                            <i data-lucide="bar-chart-3" class="w-3 h-3"></i> Weekday Flow
+                        </h3>
+                        <div class="flex-1 relative w-full h-full">
+                            <canvas id="weekdayChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 print:p-4 rounded-2xl border border-slate-100 shadow-sm h-[200px] print:h-[150px] flex flex-col">
+                        <h3 class="text-[10px] font-black mb-2 flex items-center gap-2 text-slate-400 uppercase tracking-widest shrink-0">
+                            <i data-lucide="package" class="w-3 h-3"></i> Capacity Segments
+                        </h3>
+                        <div class="flex-1 relative w-full h-full">
+                            <canvas id="capacityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Systems Sold by Executive Chart -->
+                <div class="bg-white p-6 print:p-4 rounded-2xl border border-slate-100 shadow-sm h-[220px] print:h-[160px] flex flex-col">
+                    <h3 class="text-[10px] font-black mb-2 flex items-center gap-2 text-slate-400 uppercase tracking-widest shrink-0">
+                        <i data-lucide="users" class="w-3 h-3"></i> Systems Sold by Executive
+                    </h3>
+                    <div class="flex-1 relative w-full h-full">
+                        <canvas id="salespersonChart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Leaderboard -->
+            <div class="bg-white p-6 print:p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col">
+                <h3 class="text-sm font-bold mb-4 flex items-center gap-2 text-slate-700">
+                    <i data-lucide="award" class="text-amber-500 w-4 h-4"></i> Force Rankings
+                </h3>
+                <div id="leaderboard-container" class="space-y-2 flex-1 w-full overflow-y-auto custom-scrollbar print:max-h-none print:overflow-visible max-h-[750px]">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Audit Table -->
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden print:shadow-none">
+            <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10 print:p-2">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="shield-check" class="text-emerald-500 w-5 h-5"></i>
+                    <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">Enterprise Audit Register</h3>
+                </div>
+                <span class="text-[10px] font-bold text-slate-400">Total Records: <span id="table-count">0</span> Visible</span>
+            </div>
+            <div class="overflow-x-auto w-full max-h-[600px] custom-scrollbar print:max-h-none print:overflow-visible">
+                <table class="w-full text-left table-fixed">
+                    <thead class="bg-slate-50 text-[9px] uppercase text-slate-400 font-black sticky top-0 z-20">
+                        <tr>
+                            <th class="px-4 py-2 w-1/3">Client Profile</th>
+                            <th class="px-4 py-2 w-1/4">Executive</th>
+                            <th class="px-4 py-2 w-1/6 text-center">kW</th>
+                            <th class="px-4 py-2 w-1/4 text-right">Invoice</th>
+                        </tr>
+                    </thead>
+                    <tbody id="audit-table-body" class="divide-y divide-slate-100 text-[10px]">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <footer class="max-w-7xl mx-auto px-6 text-slate-400 text-[9px] font-bold uppercase tracking-[0.2em] mt-8 flex justify-between items-center print:mt-4 print:pb-4">
+        <div class="flex items-center gap-4">
+            <span class="flex items-center gap-1 font-black"><i data-lucide="map-pin" class="w-3 h-3"></i> Regional Center</span>
+        </div>
+        <div class="flex items-center gap-6">
+            <span class="bg-white px-3 py-1 rounded-full border border-slate-200">CONFIDENTIAL • MAY 2026 AUDIT CYCLE</span>
+        </div>
+    </footer>
+
+    <!-- Sync Data Modal (Hidden by default) -->
+    <div id="sync-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md print:hidden">
+        <div class="bg-white rounded-[3rem] p-10 max-w-2xl w-full shadow-2xl border border-white/20">
+            <div class="flex justify-between items-start mb-8">
+                <h2 class="text-3xl font-black text-slate-900">Data Synchronization</h2>
+                <button onclick="document.getElementById('sync-modal').classList.add('hidden')" class="p-2 hover:bg-slate-100 rounded-full text-slate-400">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <textarea id="sync-input" class="w-full h-48 bg-slate-50 border-2 border-slate-100 rounded-[2rem] p-6 text-sm font-mono focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all mb-8" placeholder="Paste rows..."></textarea>
+            <div class="flex justify-end gap-4">
+                <button onclick="document.getElementById('sync-modal').classList.add('hidden')" class="px-8 py-3 font-bold text-slate-400">Discard</button>
+                <button onclick="handleSyncData()" class="bg-blue-600 text-white px-10 py-3 rounded-2xl font-black">Sync Database Now</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Extremely Safe DataLabels Registration (Prevents crashes)
+        if (typeof ChartDataLabels !== 'undefined' && typeof Chart !== 'undefined') {
+            try { Chart.register(ChartDataLabels); } catch (e) { /* Ignore if already registered */ }
+        }
+
+        // 1. Initial Data Setup (Perfected 83 Records from May 2026)
+        const initialRecords = [
+            { customer: "SEWA LAL PATEL", mobile: "8005496055", date: "2026-05-31", capacity: 3.36, amount: 198000, salesperson: "ANMOL UPADHYAY" },
+            { customer: "MAMTA SINGH", mobile: "9453725305", date: "2026-05-31", capacity: 3.36, amount: 185000, salesperson: "RAHUL SIR" },
+            { customer: "NANDAN", mobile: "9695819678", date: "2026-05-31", capacity: 2.14, amount: 145000, salesperson: "ASHISH UPADHYAY" },
+            { customer: "KALAVATI DEVI", mobile: "9555430073", date: "2026-05-31", capacity: 3.21, amount: 206000, salesperson: "ASHISH UPADHYAY" },
+            { customer: "SONY SINGH", mobile: "9415389767", date: "2026-05-31", capacity: 3.21, amount: 195000, salesperson: "ASHISH UPADHYAY" },
+            { customer: "RINA SINGH", mobile: "9430875410", date: "2026-05-29", capacity: 4.48, amount: 235000, salesperson: "SATISH MAURYA" },
+            { customer: "Brijesh Kumar Tiwari", mobile: "7780858082", date: "2026-05-28", capacity: 4.48, amount: 240000, salesperson: "ANMOL UPADHYAY" },
+            { customer: "VIKASH KUMAR", mobile: "9120825453", date: "2026-05-27", capacity: 3.36, amount: 206000, salesperson: "SATISH MAURYA" },
+            { customer: "PRAVEEN KUMAR JAISWAL", mobile: "9389144718", date: "2026-05-27", capacity: 3.36, amount: 206000, salesperson: "SATISH MAURYA" },
+            { customer: "MOHD. RAHIS KURAISI", mobile: "9984511618", date: "2026-05-27", capacity: 3.27, amount: 206000, salesperson: "ASHISH UPADHYAY" },
+            { customer: "VIDYA SINGH", mobile: "9450195497", date: "2026-05-26", capacity: 3, amount: 206000, salesperson: "DEEPAK PANDEY" },
+            { customer: "PUSHPRAJ VISHWAKARMA", mobile: "9125845186", date: "2026-05-26", capacity: 3, amount: 206000, salesperson: "DEEPAK PANDEY" },
+            { customer: "ISARAT JAHA", mobile: "8574128793", date: "2026-05-26", capacity: 3.36, amount: 180000, salesperson: "ADITYA NARAYAN" },
+            { customer: "RAJEEV KUMAR TIWARI", mobile: "7007268876", date: "2026-05-25", capacity: 4.48, amount: 240000, salesperson: "ADITYA NARAYAN" },
+            { customer: "SHASHANK SHEKHAR BAJPAI", mobile: "7905564312", date: "2026-05-25", capacity: 4.48, amount: 240000, salesperson: "SATISH MAURYA" },
+            { customer: "AJAY SINGH", mobile: "9453223388", date: "2026-05-24", capacity: 3.36, amount: 180000, salesperson: "DEEPAK PANDEY" },
+            { customer: "Sanjay Kumar Yadav", mobile: "7905519926", date: "2026-05-24", capacity: 3.36, amount: 180000, salesperson: "DEEPAK PANDEY" },
+            { customer: "ASHISH GOSWAMI", mobile: "9919501854", date: "2026-05-22", capacity: 3.36, amount: 185000, salesperson: "MANOJ CHAUBEY" },
+            { customer: "SIDDHARTH TIWARI", mobile: "9794002211", date: "2026-05-22", capacity: 3.36, amount: 185000, salesperson: "ANMOL UPADHYAY" },
+            { customer: "SOMAROO GUPTA", mobile: "8887650244", date: "2026-05-22", capacity: 2.14, amount: 145000, salesperson: "SATISH MAURYA" },
+            { customer: "KAJAL SINGH", mobile: "9569178071", date: "2026-05-22", capacity: 3.21, amount: 200000, salesperson: "SATISH MAURYA" },
+            { customer: "SACHCHIDANAND ANURAG", mobile: "8188879682", date: "2026-05-22", capacity: 3.21, amount: 206000, salesperson: "ASHISH UPADHYAY" },
+            { customer: "GAYA PRASAD YADAV", mobile: "9838707600", date: "2026-05-22", capacity: 5.6, amount: 285000, salesperson: "MANOJ CHAUBEY" },
+            { customer: "BRAJESH KUMAR SINGH", mobile: "9918377286", date: "2026-05-22", capacity: 4, amount: 240000, salesperson: "SATISH MAURYA" },
+            { customer: "PRADEEP KUMAR JAISWAL", mobile: "9696404343", date: "2026-05-22", capacity: 5.6, amount: 280000, salesperson: "SATISH MAURYA" },
+            { customer: "LALCHAND PATEL", mobile: "8433358860", date: "2026-05-18", capacity: 3.36, amount: 183000, salesperson: "SANDEEP CHAUBEY" },
+            { customer: "UMASHANKAR", mobile: "8826325890", date: "2026-05-17", capacity: 3, amount: 270000, salesperson: "RAHUL SIR" },
+            { customer: "RENU PANDEY", mobile: "9839994466", date: "2026-05-17", capacity: 3.36, amount: 200000, salesperson: "MANOJ CHAUBEY" },
+            { customer: "NITU PATEL", mobile: "7080400213", date: "2026-05-17", capacity: 3.36, amount: 182500, salesperson: "RAHUL SIR" },
+            { customer: "SAVITA SRIVASTAVA", mobile: "8887793014", date: "2026-05-17", capacity: 4.48, amount: 230000, salesperson: "MANOJ CHAUBEY" },
+            { customer: "DROUPADI PANDEY", mobile: "8318819638", date: "2026-05-17", capacity: 3.36, amount: 182000, salesperson: "SANDEEP CHAUBEY" },
+            { customer: "MANOHAR YADAV", mobile: "8756241010", date: "2026-05-17", capacity: 3.36, amount: 200000, salesperson: "DEEPAK PANDEY" },
+            { customer: "KIRAN DIXIT", mobile: "8787078755", date: "2026-05-15", capacity: 4, amount: 230000, salesperson: "MANOJ CHAUBEY" },
+            { customer: "SONI MISHR", mobile: "9026741185", date: "2026-05-15", capacity: 3.21, amount: 190000, salesperson: "DEEPAK PANDEY" },
+            { customer: "SANDHYA PANDEY", mobile: "9415722525", date: "2026-05-15", capacity: 3.36, amount: 185000, salesperson: "MANOJ CHAUBEY" },
+            { customer: "MAMTA SINGH", mobile: "9839885063", date: "2026-05-15", capacity: 3.21, amount: 200000, salesperson: "SATISH MAURYA" },
+            { customer: "FARHANA", mobile: "7897126960", date: "2026-05-14", capacity: 3, amount: 206000, salesperson: "SANDEEP CHAUBEY" },
+            { customer: "ANIL KUMAR", mobile: "7007183629", date: "2026-05-14", capacity: 3, amount: 206000, salesperson: "ADITYA NARAYAN" },
+            { customer: "SUBHASH CHANDRA", mobile: "7786947655", date: "2026-05-14", capacity: 3.27, amount: 195000, salesperson: "SATISH MAURYA" },
+            { customer: "MAMTA", mobile: "6306462205", date: "2026-05-14", capacity: 2.14, amount: 120000, salesperson: "SANDEEP CHAUBEY" },
+            { customer: "RADHA RAMAN CHAUBEY", mobile: "6306462205", date: "2026-05-13", capacity: 3.27, amount: 0, salesperson: "SATISH MAURYA" },
+            { customer: "AKHILESH KUMAR TIWARI", mobile: "9451888604", date: "2026-05-13", capacity: 2.14, amount: 0, salesperson: "SATISH MAURYA" },
+            { customer: "RAM PRAVESH SINGH", mobile: "7747043871", date: "2026-05-13", capacity: 5, amount: 0, salesperson: "SATISH MAURYA" },
+            { customer: "SHWETA SINGH", mobile: "7408999983", date: "2026-05-12", capacity: 3, amount: 200000, salesperson: "DEEPAK PANDEY" },
+            { customer: "ASHA RAI", mobile: "9453552592", date: "2026-05-12", capacity: 3.36, amount: 200000, salesperson: "MANOJ CHAUBEY" },
+            { customer: "USHA", mobile: "8887527029", date: "2026-05-10", capacity: 3.36, amount: 200000, salesperson: "ADITYA NARAYAN" },
+            { customer: "KAILASH PRASAD", mobile: "8707000253", date: "2026-05-10", capacity: 4.48, amount: 235000, salesperson: "MANOJ CHAUBEY" },
+            { customer: "RAGINI PATEL", mobile: "9696519432", date: "2026-05-10", capacity: 3.36, amount: 200000, salesperson: "ADITYA NARAYAN" },
+            { customer: "MEERA DEVI", mobile: "9936179475", date: "2026-05-10", capacity: 3.21, amount: 189500, salesperson: "SATISH MAURYA" },
+            { customer: "DIPAK", mobile: "9519283203", date: "2026-05-10", capacity: 2.14, amount: 145000, salesperson: "ASHISH UPADHYAY" },
+            { customer: "TARA DEVI", mobile: "8840952393", date: "2026-05-10", capacity: 3, amount: 185000, salesperson: "SATISH MAURYA" },
+            { customer: "KALLU YADAV", mobile: "8318550553", date: "2026-05-08", capacity: 2.14, amount: 145000, salesperson: "SANDEEP CHAUBEY" },
+            { customer: "RAMA TRIPATHI", mobile: "7905215449", date: "2026-05-08", capacity: 3.36, amount: 180000, salesperson: "MANOJ CHAUBEY" },
+            { customer: "MANJU RAI", mobile: "6393861657", date: "2026-05-08", capacity: 3.36, amount: 206000, salesperson: "SATISH MAURYA" },
+            { customer: "INDU SINGH", mobile: "9453989528", date: "2026-05-08", capacity: 3.36, amount: 175000, salesperson: "MANOJ CHAUBEY" },
+            { customer: "NIRMAL SUD", mobile: "9236710734", date: "2026-05-07", capacity: 3.42, amount: 206000, salesperson: "ASHISH UPADHYAY" },
+            { customer: "MEERA", mobile: "9628411790", date: "2026-05-07", capacity: 3.42, amount: 200000, salesperson: "ASHISH UPADHYAY" },
+            { customer: "UMESH CHANDRA SINGH", mobile: "9415653230", date: "2026-05-07", capacity: 4.48, amount: 230000, salesperson: "SATISH MAURYA" },
+            { customer: "AFJAL ALI", mobile: "7786085859", date: "2026-05-07", capacity: 3.27, amount: 206000, salesperson: "ASHISH UPADHYAY" },
+            { customer: "ANITA", mobile: "9026624382", date: "2026-05-07", capacity: 4.48, amount: 235000, salesperson: "SATISH MAURYA" },
+            { customer: "SUSHMA GUPTA", mobile: "6392666091", date: "2026-05-06", capacity: 3.36, amount: 190000, salesperson: "NITESH PANDEY" },
+            { customer: "PRABHU NARAYAN SINGH", mobile: "8887935530", date: "2026-05-05", capacity: 3.36, amount: 180000, salesperson: "DEEPAK PANDEY" },
+            { customer: "MADHU GUPTA", mobile: "8181809266", date: "2026-05-05", capacity: 3.36, amount: 200000, salesperson: "SATISH MAURYA" },
+            { customer: "DAYASHANKAR SINGH", mobile: "9453781716", date: "2026-05-05", capacity: 3.36, amount: 185000, salesperson: "DEEPAK PANDEY" },
+            { customer: "PUSHPA", mobile: "8317049021", date: "2026-05-05", capacity: 3.36, amount: 180000, salesperson: "DEEPAK PANDEY" },
+            { customer: "LOKESH KUMAR JHA", mobile: "8004931764", date: "2026-05-05", capacity: 3.36, amount: 180000, salesperson: "SATISH MAURYA" },
+            { customer: "CHANDRASEN KUMAR MISHRA", mobile: "7352215078", date: "2026-05-04", capacity: 3.36, amount: 194500, salesperson: "ADITYA NARAYAN" },
+            { customer: "USHA YADAV", mobile: "9935060005", date: "2026-05-04", capacity: 5.6, amount: 560000, salesperson: "RAHUL MISHRA (VIPIN)" },
+            { customer: "BEILA DEVI", mobile: "9473859674", date: "2026-05-03", capacity: 5, amount: 270000, salesperson: "SATISH MAURYA" },
+            { customer: "MUNNI DEVI", mobile: "8887373853", date: "2026-05-03", capacity: 3.36, amount: 206000, salesperson: "DEEPAK PANDEY (GOPAL JI)" },
+            { customer: "RAKESH KUMAR YADAV", mobile: "7380363922", date: "2026-05-03", capacity: 3.27, amount: 206000, salesperson: "ASHISH UPADHYAY" },
+            { customer: "VINOD YADAV", mobile: "7379713342", date: "2026-05-03", capacity: 3.27, amount: 206000, salesperson: "ASHISH UPADHYAY" },
+            { customer: "SUBHASH YADAV", mobile: "7784017550", date: "2026-05-03", capacity: 3.27, amount: 206000, salesperson: "ASHISH UPADHYAY" },
+            { customer: "RAJESH", mobile: "9935638523", date: "2026-05-03", capacity: 2.14, amount: 145000, salesperson: "ASHISH UPADHYAY" },
+            { customer: "AJIT KUMAR", mobile: "8953002805", date: "2026-05-03", capacity: 2.14, amount: 145000, salesperson: "ASHISH UPADHYAY" },
+            { customer: "MANJU LAL SONKAR", mobile: "7860826356", date: "2026-05-02", capacity: 3.21, amount: 194500, salesperson: "ADITYA NARAYAN" },
+            { customer: "ROSELINE DAS", mobile: "9198302674", date: "2026-05-02", capacity: 4.48, amount: 240000, salesperson: "MANOJ CHAUBEY" },
+            { customer: "RAMESH KUMAR JAISWAL", mobile: "7905025903", date: "2026-05-02", capacity: 3.36, amount: 206000, salesperson: "SANDEEP CHAUBEY" },
+            { customer: "SWARNLATA SRIVASTAVA", mobile: "8765509221", date: "2026-05-02", capacity: 4, amount: 242000, salesperson: "SATISH MAURYA" },
+            { customer: "ANJANA RAHUL PANDEY", mobile: "8604489197", date: "2026-05-01", capacity: 3, amount: 200000, salesperson: "ASHISH UPADHYAY" },
+            { customer: "SARITA DEVI", mobile: "8957221783", date: "2026-05-01", capacity: 3.36, amount: 206000, salesperson: "DEEPAK PANDEY" },
+            { customer: "CHHAYA DEVI", mobile: "9792852637", date: "2026-05-01", capacity: 3.21, amount: 194500, salesperson: "ADITYA NARAYAN" },
+            { customer: "Gudiya", mobile: "7752972154", date: "2026-05-01", capacity: 3.27, amount: 211112, salesperson: "RAHUL MISHRA (MUNGARI)" }
+        ];
+
+        // State Variables
+        let allData = [...initialRecords];
+        let searchTerm = "";
+        let selectedRep = null;
+        let chartInstances = {};
+
+        // Constants
+        const TARGET_REVENUE = 12000000; // 1.2 Crore
+        const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4'];
+
+        // Helper: Format Currency safely
+        const formatMoney = (num) => '₹' + (num || 0).toLocaleString('en-IN');
+        
+        // Helper: Intelligent Title Case (Fixes capitalization and parentheses seamlessly)
+        const toTitleCase = (str) => {
+            if (!str) return "Unknown";
+            return str.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
+        };
+
+        // 2. Data Handler for Sync
+        function handleSyncData() {
+            const csvInput = document.getElementById('sync-input').value;
+            if (!csvInput.trim()) return;
+            try {
+                const rows = csvInput.split('\n').filter(r => r.trim().length > 0);
+                const isHeader = rows[0].toLowerCase().includes('customer') || rows[0].toLowerCase().includes('mobile');
+                const dataToParse = isHeader ? rows.slice(1) : rows;
+
+                const parsed = dataToParse.map(row => {
+                    const parts = row.split(/,|\t/);
+                    return {
+                        customer: parts[0]?.trim().replace(/"/g, '') || "N/A",
+                        mobile: parts[1]?.trim() || "N/A",
+                        date: parts[2]?.trim() || "2026-05-01", 
+                        capacity: parseFloat(parts[3]) || 0,
+                        amount: parseFloat(parts[4]) || 0,
+                        salesperson: (parts[5]?.trim() || "Unknown").replace(/\s+$/, '')
+                    };
+                });
+
+                if (parsed.length > 0) {
+                    allData = parsed;
+                    document.getElementById('sync-modal').classList.add('hidden');
+                    document.getElementById('sync-input').value = "";
+                    renderUI();
+                }
+            } catch (e) { console.error("Sync error", e); }
+        }
+
+        // 3. Core Logic & Computation
+        function computeStats() {
+            // Filter Data based on selection and search
+            const filteredData = allData.filter(item => {
+                const cleanRepName = toTitleCase(item.salesperson.trim());
+                const matchesSearch = String(item.customer || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
+                                      cleanRepName.toLowerCase().includes(searchTerm.toLowerCase());
+                const matchesRep = !selectedRep || cleanRepName === selectedRep;
+                return matchesSearch && matchesRep;
+            });
+
+            if (!filteredData.length) return { filteredData, totalRevenue: 0, totalCapacity: 0, avgTicket: 0, revenuePerKw: 0, dealCount: 0, topSales: [], timeline: [], weekdayPerformance: [], capDist: [], topPerformer: null };
+
+            let totalRevenue = 0;
+            let totalCapacity = 0;
+            const bySales = {};
+            const dailyData = {};
+            const weekdayMap = { "Sun":0, "Mon":0, "Tue":0, "Wed":0, "Thu":0, "Fri":0, "Sat":0 };
+            const capSegments = { "< 3 kW": 0, "3 kW": 0, "3.1 - 4 kW": 0, "> 4 kW": 0 };
+
+            filteredData.forEach(curr => {
+                totalRevenue += curr.amount || 0;
+                totalCapacity += curr.capacity || 0;
+
+                // Rep logic (Normalized properly)
+                const sp = toTitleCase(curr.salesperson || "Unknown");
+                if (!bySales[sp]) bySales[sp] = { name: sp, revenue: 0, deals: 0, capacity: 0 };
+                bySales[sp].revenue += curr.amount || 0;
+                bySales[sp].deals += 1;
+                bySales[sp].capacity += curr.capacity || 0;
+
+                // Timeline logic
+                const d = curr.date;
+                if (!dailyData[d]) dailyData[d] = { date: d, revenue: 0, deals: 0 };
+                dailyData[d].revenue += curr.amount || 0;
+                dailyData[d].deals += 1;
+
+                // Weekday logic
+                const dateObj = new Date(curr.date);
+                if(!isNaN(dateObj)) {
+                    const dayName = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][dateObj.getDay()];
+                    weekdayMap[dayName] += curr.amount || 0;
+                }
+
+                // Perfected Capacity Segmentation
+                if (curr.capacity > 4) capSegments["> 4 kW"] += 1;
+                else if (curr.capacity > 3) capSegments["3.1 - 4 kW"] += 1;
+                else if (curr.capacity === 3) capSegments["3 kW"] += 1;
+                else capSegments["< 3 kW"] += 1;
+            });
+
+            const sortedSales = Object.values(bySales).sort((a, b) => b.revenue - a.revenue);
+            const timeline = Object.values(dailyData).sort((a, b) => new Date(a.date) - new Date(b.date));
+            const weekdayPerformance = Object.keys(weekdayMap).map(k => ({ name: k, revenue: weekdayMap[k] }));
+            const capDist = Object.keys(capSegments).map(k => ({ name: k, value: capSegments[k] }));
+
+            return {
+                filteredData,
+                totalRevenue,
+                totalCapacity,
+                avgTicket: filteredData.length ? (totalRevenue / filteredData.length) : 0,
+                revenuePerKw: totalCapacity ? (totalRevenue / totalCapacity) : 0,
+                dealCount: filteredData.length,
+                topSales: sortedSales,
+                timeline,
+                weekdayPerformance,
+                capDist,
+                topPerformer: sortedSales[0] || null
+            };
+        }
+
+        // 4. UI Updater Functions
+        function renderUI() {
+            try {
+                const stats = computeStats();
+
+                // Update Header
+                document.getElementById('header-total-records').innerText = allData.length; 
+                document.getElementById('table-count').innerText = stats.dealCount; 
+                
+                // Filter Visibility
+                const filterBtn = document.getElementById('btn-clear-filter');
+                if (selectedRep) {
+                    document.getElementById('lbl-selected-rep').innerText = selectedRep;
+                    filterBtn.classList.remove('hidden');
+                    filterBtn.classList.add('flex');
+                } else {
+                    filterBtn.classList.add('hidden');
+                    filterBtn.classList.remove('flex');
+                }
+
+                // High Level Pulse
+                document.getElementById('val-total-revenue').innerText = formatMoney(stats.totalRevenue);
+                const progress = Math.min((stats.totalRevenue / TARGET_REVENUE) * 100, 100);
+                document.getElementById('val-progress-text').innerText = progress.toFixed(1) + '%';
+                document.getElementById('val-progress-bar').style.width = progress + '%';
+
+                // Global Sub-Metrics
+                document.getElementById('val-global-deals').innerText = stats.dealCount;
+                const avgKw = stats.dealCount ? (stats.totalCapacity / stats.dealCount).toFixed(2) : '0';
+                document.getElementById('val-avg-kw').innerText = avgKw + ' kW';
+                
+                const peakDateStr = stats.timeline.length ? [...stats.timeline].sort((a,b) => b.revenue - a.revenue)[0].date : 'N/A';
+                document.getElementById('val-peak-date').innerText = peakDateStr;
+
+                if (stats.topPerformer) {
+                    document.getElementById('val-top-name').innerText = stats.topPerformer.name;
+                    document.getElementById('val-top-rev').innerText = formatMoney(stats.topPerformer.revenue);
+                    document.getElementById('val-top-deals').innerText = stats.topPerformer.deals;
+                } else {
+                    document.getElementById('val-top-name').innerText = "N/A";
+                    document.getElementById('val-top-rev').innerText = "₹0";
+                    document.getElementById('val-top-deals').innerText = "0";
+                }
+
+                // KPIs
+                document.getElementById('kpi-revenue').innerText = formatMoney(stats.totalRevenue);
+                document.getElementById('kpi-capacity').innerText = stats.totalCapacity.toFixed(1) + ' kW';
+                document.getElementById('kpi-efficiency').innerText = formatMoney(Math.round(stats.revenuePerKw || 0));
+                document.getElementById('kpi-ticket').innerText = formatMoney(Math.round(stats.avgTicket || 0));
+
+                // Render Table
+                const tbody = document.getElementById('audit-table-body');
+                tbody.innerHTML = stats.filteredData.map(item => `
+                    <tr class="hover:bg-slate-50/80 transition-colors print:bg-white">
+                        <td class="px-4 py-1.5 border-b border-slate-50">
+                            <div class="font-bold text-slate-800 truncate">${item.customer}</div>
+                            <div class="text-[8px] text-slate-400">${item.mobile} • ${item.date}</div>
+                        </td>
+                        <td class="px-4 py-1.5 border-b border-slate-50 font-semibold text-slate-600 truncate">${toTitleCase(item.salesperson)}</td>
+                        <td class="px-4 py-1.5 border-b border-slate-50 text-center font-black text-blue-600">${item.capacity}</td>
+                        <td class="px-4 py-1.5 border-b border-slate-50 text-right font-black text-slate-900">${formatMoney(item.amount)}</td>
+                    </tr>
+                `).join('');
+
+                // Render Leaderboard
+                const maxRev = stats.topPerformer ? stats.topPerformer.revenue : 1;
+                const lbContainer = document.getElementById('leaderboard-container');
+                lbContainer.innerHTML = stats.topSales.map(sp => `
+                    <div onclick="selectRep('${sp.name.replace(/'/g, "\\'")}')" class="group cursor-pointer p-2 rounded-xl transition-all border ${selectedRep === sp.name ? 'bg-blue-50 border-blue-200 shadow-sm' : 'border-slate-50 hover:border-slate-200'} print:p-1.5">
+                        <div class="flex justify-between items-center mb-1">
+                            <div class="flex items-center gap-2">
+                                <span class="text-[11px] font-bold text-slate-700">${sp.name}</span>
+                                <span class="text-[9px] font-bold text-slate-500 bg-slate-100 px-1.5 rounded-sm">${sp.deals} deals</span>
+                            </div>
+                            <span class="text-[10px] font-black text-blue-600">${formatMoney(sp.revenue)}</span>
+                        </div>
+                        <div class="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                            <div class="h-full bg-blue-500 rounded-full" style="width: ${(sp.revenue / maxRev) * 100}%"></div>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Update Charts
+                renderCharts(stats);
+            } catch (err) {
+                console.error("UI Render Guard:", err);
+            }
+        }
+
+        // 5. Charting System with Permanent DataLabels
+        function renderCharts(stats) {
+            if (typeof Chart === 'undefined') return;
+
+            Chart.defaults.font.family = 'Inter, sans-serif';
+            Chart.defaults.color = '#94a3b8';
+            Chart.defaults.scale.grid.color = '#f1f5f9';
+
+            // --- Timeline Chart ---
+            const ctxTime = document.getElementById('timelineChart').getContext('2d');
+            const gradientTime = ctxTime.createLinearGradient(0, 0, 0, 300);
+            gradientTime.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
+            gradientTime.addColorStop(1, 'rgba(59, 130, 246, 0)');
+
+            if(chartInstances.timeline) chartInstances.timeline.destroy();
+            chartInstances.timeline = new Chart(ctxTime, {
+                type: 'line',
+                data: {
+                    labels: stats.timeline.map(d => d.date.split('-').slice(1).join('/')),
+                    datasets: [{
+                        data: stats.timeline.map(d => d.revenue),
+                        borderColor: '#3b82f6',
+                        backgroundColor: gradientTime,
+                        borderWidth: 2,
+                        pointBackgroundColor: '#3b82f6',
+                        pointBorderColor: '#fff',
+                        pointRadius: 4,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    layout: { padding: { top: 20, right: 10 } },
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: false }, 
+                        tooltip: { callbacks: { label: (ctx) => formatMoney(ctx.raw) } },
+                        datalabels: {
+                            align: 'top',
+                            anchor: 'end',
+                            offset: 2,
+                            formatter: (val) => val > 0 ? (val/1000).toFixed(0) + 'k' : '',
+                            color: '#3b82f6',
+                            font: { size: 9, weight: 'bold' }
+                        }
+                    },
+                    scales: { 
+                        x: { grid: { display: false } }, 
+                        y: { ticks: { callback: (val) => '₹' + (val/1000) + 'k' }, border: {display: false} }
+                    }
+                }
+            });
+
+            // --- Weekday Chart ---
+            const ctxWeek = document.getElementById('weekdayChart').getContext('2d');
+            if(chartInstances.weekday) chartInstances.weekday.destroy();
+            chartInstances.weekday = new Chart(ctxWeek, {
+                type: 'bar',
+                data: {
+                    labels: stats.weekdayPerformance.map(d => d.name),
+                    datasets: [{
+                        data: stats.weekdayPerformance.map(d => d.revenue),
+                        backgroundColor: '#3b82f6',
+                        borderRadius: {topLeft: 4, topRight: 4},
+                    }]
+                },
+                options: {
+                    layout: { padding: { top: 20 } },
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: false }, 
+                        tooltip: { callbacks: { label: (ctx) => formatMoney(ctx.raw) } },
+                        datalabels: {
+                            align: 'top',
+                            anchor: 'end',
+                            formatter: (val) => val > 0 ? '₹' + (val/1000).toFixed(0) + 'k' : '',
+                            color: '#3b82f6',
+                            font: { size: 9, weight: 'bold' }
+                        }
+                    },
+                    scales: { x: { grid: { display: false }, border: {display:false} }, y: { display: false } }
+                }
+            });
+
+            // --- Capacity Pie Chart ---
+            const ctxCap = document.getElementById('capacityChart').getContext('2d');
+            if(chartInstances.capacity) chartInstances.capacity.destroy();
+            chartInstances.capacity = new Chart(ctxCap, {
+                type: 'doughnut',
+                data: {
+                    labels: stats.capDist.map(d => d.name),
+                    datasets: [{
+                        data: stats.capDist.map(d => d.value),
+                        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
+                        borderWidth: 0,
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: (ctx) => ` ${ctx.raw} units` } },
+                        datalabels: {
+                            color: '#ffffff',
+                            formatter: (val) => val > 0 ? val : '',
+                            font: { size: 12, weight: 'bold' }
+                        }
+                    }
+                }
+            });
+
+            // --- Salesperson Deals Bar Chart ---
+            const ctxSales = document.getElementById('salespersonChart').getContext('2d');
+            if(chartInstances.salesperson) chartInstances.salesperson.destroy();
+            
+            const salesByDeals = [...stats.topSales].sort((a, b) => b.deals - a.deals);
+            
+            chartInstances.salesperson = new Chart(ctxSales, {
+                type: 'bar',
+                data: {
+                    // Abbreviate names smartly (e.g. "Satish M.") to prevent axis overlap safely
+                    labels: salesByDeals.map(d => {
+                        let n = String(d.name || "").trim().split(/\s+/);
+                        return n.length > 1 && n[1] ? n[0] + ' ' + n[1][0] + '.' : n[0];
+                    }), 
+                    datasets: [{
+                        data: salesByDeals.map(d => d.deals),
+                        backgroundColor: '#8b5cf6',
+                        borderRadius: {topLeft: 4, topRight: 4},
+                    }]
+                },
+                options: {
+                    layout: { padding: { top: 20 } },
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: false }, 
+                        tooltip: { callbacks: { label: (ctx) => ` ${ctx.raw} Systems Sold` } },
+                        datalabels: {
+                            align: 'top',
+                            anchor: 'end',
+                            formatter: (val) => val > 0 ? val : '',
+                            color: '#8b5cf6',
+                            font: { size: 9, weight: 'bold' }
+                        }
+                    },
+                    scales: { 
+                        x: { grid: { display: false }, border: {display:false}, ticks: { font: { size: 9 } } }, 
+                        y: { display: true, grid: { color: '#f1f5f9' }, border: {display:false}, ticks: { stepSize: 1, font: { size: 9 } } } 
+                    }
+                }
+            });
+        }
+
+        // 6. Global Interaction Listeners
+        function handleSearch() {
+            searchTerm = document.getElementById('search-input').value;
+            renderUI();
+        }
+
+        function selectRep(name) {
+            selectedRep = selectedRep === name ? null : name; // Toggle functionality
+            renderUI();
+        }
+
+        function clearFilter() {
+            selectedRep = null;
+            document.getElementById('search-input').value = "";
+            searchTerm = "";
+            renderUI();
+        }
+
+        // Bootstrap the Application
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('current-date').innerText = new Date().toLocaleDateString('en-IN');
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+            renderUI();
+        });
+
+    </script>
+</body>
+</html>
