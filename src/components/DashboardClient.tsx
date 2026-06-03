@@ -62,6 +62,13 @@ const toTitleCase = (str: string) => {
     return str.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
 };
 
+const parseDateLocal = (dateStr: string) => {
+    if (!dateStr) return new Date(NaN);
+    const [y, m, d] = dateStr.split('-');
+    if (!y || !m || !d) return new Date(dateStr);
+    return new Date(Number(y), Number(m) - 1, Number(d));
+};
+
 type RecordData = {
     customer: string;
     mobile: string;
@@ -82,7 +89,7 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
     const initialMonths = useMemo(() => {
         const months = new Set<string>();
         initialRecords.forEach(item => {
-            const d = new Date(item.date);
+            const d = parseDateLocal(item.date);
             if(!isNaN(d.getTime())) {
                 months.add(d.toLocaleString('default', { month: 'long', year: 'numeric' }));
             }
@@ -95,7 +102,7 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
     const availableMonths = useMemo(() => {
         const months = new Set<string>();
         allData.forEach(item => {
-            const d = new Date(item.date);
+            const d = parseDateLocal(item.date);
             if(!isNaN(d.getTime())) {
                 months.add(d.toLocaleString('default', { month: 'long', year: 'numeric' }));
             }
@@ -116,7 +123,7 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
             
             let matchesMonth = true;
             if (selectedMonth !== "All") {
-                const d = new Date(item.date);
+                const d = parseDateLocal(item.date);
                 if (!isNaN(d.getTime())) {
                     const itemMonth = d.toLocaleString('default', { month: 'long', year: 'numeric' });
                     matchesMonth = itemMonth === selectedMonth;
@@ -148,7 +155,7 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
             dailyData[d].revenue += curr.amount || 0;
             dailyData[d].deals += 1;
 
-            const dateObj = new Date(curr.date);
+            const dateObj = parseDateLocal(curr.date);
             if(!isNaN(dateObj.getTime())) {
                 const dayName = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][dateObj.getDay()];
                 weekdayMap[dayName] += curr.amount || 0;
@@ -161,7 +168,7 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
         });
 
         const sortedSales = Object.values(bySales).sort((a, b) => b.revenue - a.revenue);
-        const timeline = Object.values(dailyData).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        const timeline = Object.values(dailyData).sort((a, b) => parseDateLocal(a.date).getTime() - parseDateLocal(b.date).getTime());
         const weekdayPerformance = Object.keys(weekdayMap).map(k => ({ name: k, revenue: weekdayMap[k] }));
         const capDist = Object.keys(capSegments).map(k => ({ name: k, value: capSegments[k] }));
         
