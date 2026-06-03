@@ -17,6 +17,7 @@ import {
   Award,
   ShieldCheck,
   MapPin,
+  Cpu,
   X
 } from 'lucide-react';
 import {
@@ -76,6 +77,8 @@ type RecordData = {
     capacity: number;
     amount: number;
     salesperson: string;
+    company?: string;
+    location?: string;
 };
 
 export default function DashboardClient({ initialRecords }: { initialRecords: RecordData[] }) {
@@ -139,6 +142,9 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
         const dailyData: Record<string, any> = {};
         const weekdayMap: Record<string, number> = { "Sun":0, "Mon":0, "Tue":0, "Wed":0, "Thu":0, "Fri":0, "Sat":0 };
         const capSegments: Record<string, number> = { "< 3 kW": 0, "3 kW": 0, "3.1 - 4 kW": 0, "> 4 kW": 0 };
+        const locationMap: Record<string, {name: string, count: number}> = {};
+        const brandMap: Record<string, {name: string, count: number}> = {};
+        const systemMap: Record<string, {name: string, count: number}> = {};
 
         filteredData.forEach(curr => {
             totalRevenue += curr.amount || 0;
@@ -165,6 +171,18 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
             else if (curr.capacity > 3) capSegments["3.1 - 4 kW"] += 1;
             else if (curr.capacity === 3) capSegments["3 kW"] += 1;
             else capSegments["< 3 kW"] += 1;
+
+            const loc = toTitleCase(curr.location || "Unknown").trim();
+            if (!locationMap[loc]) locationMap[loc] = {name: loc, count: 0};
+            locationMap[loc].count += 1;
+
+            const brand = (curr.company || "Unknown").toUpperCase().trim();
+            if (!brandMap[brand]) brandMap[brand] = {name: brand, count: 0};
+            brandMap[brand].count += 1;
+
+            const sys = curr.capacity + " kW";
+            if (!systemMap[sys]) systemMap[sys] = {name: sys, count: 0};
+            systemMap[sys].count += 1;
         });
 
         const sortedSales = Object.values(bySales).sort((a, b) => b.revenue - a.revenue);
@@ -173,6 +191,10 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
         const capDist = Object.keys(capSegments).map(k => ({ name: k, value: capSegments[k] }));
         
         const dealCount = filteredData.length;
+
+        const topLocations = Object.values(locationMap).sort((a,b) => b.count - a.count);
+        const topBrands = Object.values(brandMap).sort((a,b) => b.count - a.count);
+        const topSystems = Object.values(systemMap).sort((a,b) => b.count - a.count);
 
         return {
             filteredData,
@@ -185,7 +207,10 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
             timeline,
             weekdayPerformance,
             capDist,
-            topPerformer: sortedSales[0] || null
+            topPerformer: sortedSales[0] || null,
+            topLocations,
+            topBrands,
+            topSystems
         };
     }, [allData, searchTerm, selectedRep, selectedMonth]);
 

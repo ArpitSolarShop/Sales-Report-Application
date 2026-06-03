@@ -16,12 +16,13 @@ export default async function Page() {
   const formattedRecords = sales.map(sale => {
     const capacityMatch = sale.notes?.match(/Capacity: ([\d.]+) kW/);
     const capacity = capacityMatch ? parseFloat(capacityMatch[1]) : 0;
-    
     return {
       customer: sale.customer.name,
       mobile: sale.customer.phone || "",
       date: sale.saleDate.toISOString().split('T')[0],
       capacity,
+      company: sale.customer.company || "Unknown",
+      location: sale.customer.address || "Unknown",
       amount: sale.totalAmount,
       salesperson: sale.agent.name
     };
