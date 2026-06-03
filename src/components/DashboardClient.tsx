@@ -212,16 +212,19 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
                 
                 {/* Header */}
                 <header className="flex justify-between items-end border-b-[3px] border-slate-900 pb-6 mb-8 pt-2 print:pt-0 print:pb-4 print:mb-6">
-                    <div>
-                        <div className="flex items-center gap-2 mb-2 print:mb-1">
-                            <Zap className="text-blue-600 print:text-slate-800 w-5 h-5" />
-                            <span className="text-xs print:text-[10px] font-black text-blue-700 print:text-slate-600 uppercase tracking-widest bg-blue-50 print:bg-transparent print:px-0 px-2 py-1 rounded-md">
-                                Data Zone: Verified Audit ({allData.length} Records)
-                            </span>
+                    <div className="flex items-center gap-6">
+                        <img src="/logo.png" alt="Krishnanuja Renewables" className="h-20 w-auto object-contain print:h-14 drop-shadow-sm" />
+                        <div>
+                            <div className="flex items-center gap-2 mb-2 print:mb-1">
+                                <Zap className="text-blue-600 print:text-slate-800 w-5 h-5" />
+                                <span className="text-xs print:text-[10px] font-black text-blue-700 print:text-slate-600 uppercase tracking-widest bg-blue-50 print:bg-transparent print:px-0 px-2 py-1 rounded-md">
+                                    Data Zone: Verified Audit ({allData.length} Records)
+                                </span>
+                            </div>
+                            <h1 className="text-3xl print:text-2xl font-black uppercase tracking-tighter text-slate-900">
+                                Krishnanuja Sales Summary
+                            </h1>
                         </div>
-                        <h1 className="text-3xl print:text-2xl font-black uppercase tracking-tighter text-slate-900">
-                            SolarSales Executive Summary
-                        </h1>
                     </div>
                     
                     <div className="text-right">
