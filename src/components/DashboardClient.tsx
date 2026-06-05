@@ -397,6 +397,42 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
                     </div>
                 </div>
 
+                {/* Top Insights Strip */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 print:gap-4 print:grid-cols-3">
+                    <div className="bg-white p-5 print:p-4 rounded-[2rem] print:rounded-xl border border-slate-100 shadow-sm flex items-center gap-4">
+                        <div className="bg-blue-100/50 text-blue-600 w-12 h-12 rounded-2xl flex items-center justify-center shrink-0">
+                            <MapPin className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Dominant Location</p>
+                            <h3 className="text-lg font-black tracking-tight text-slate-800">{stats.topLocations.length ? stats.topLocations[0].name : 'N/A'}</h3>
+                            <p className="text-[9px] font-bold text-blue-600">{stats.topLocations.length ? stats.topLocations[0].count : 0} Deals</p>
+                        </div>
+                    </div>
+                    
+                    <div className="bg-white p-5 print:p-4 rounded-[2rem] print:rounded-xl border border-slate-100 shadow-sm flex items-center gap-4">
+                        <div className="bg-emerald-100/50 text-emerald-600 w-12 h-12 rounded-2xl flex items-center justify-center shrink-0">
+                            <ShieldCheck className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Top Brand</p>
+                            <h3 className="text-lg font-black tracking-tight text-slate-800">{stats.topBrands.length ? stats.topBrands[0].name : 'N/A'}</h3>
+                            <p className="text-[9px] font-bold text-emerald-600">{stats.topBrands.length ? stats.topBrands[0].count : 0} Installs</p>
+                        </div>
+                    </div>
+
+                    <div className="bg-white p-5 print:p-4 rounded-[2rem] print:rounded-xl border border-slate-100 shadow-sm flex items-center gap-4">
+                        <div className="bg-amber-100/50 text-amber-600 w-12 h-12 rounded-2xl flex items-center justify-center shrink-0">
+                            <Cpu className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Most Popular System</p>
+                            <h3 className="text-lg font-black tracking-tight text-slate-800">{stats.topSystems.length ? stats.topSystems[0].name : 'N/A'}</h3>
+                            <p className="text-[9px] font-bold text-amber-600">{stats.topSystems.length ? stats.topSystems[0].count : 0} Units</p>
+                        </div>
+                    </div>
+                </div>
+
                 {/* KPI Strip */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 print:gap-4">
                     <div className="bg-white p-4 print:p-3 rounded-2xl border border-slate-100 shadow-sm transition-all flex items-center gap-4">
@@ -655,7 +691,7 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
                                     <tr key={i} className="hover:bg-slate-50/80 transition-colors print:bg-white">
                                         <td className="px-4 py-1.5 border-b border-slate-50">
                                             <div className="font-bold text-slate-800 truncate">{item.customer}</div>
-                                            <div className="text-[8px] text-slate-400">{item.mobile} • {item.date}</div>
+                                            <div className="text-[8px] text-slate-400">{item.mobile} • {item.date} • <span className="text-blue-500 font-bold uppercase">{item.location}</span></div>
                                         </td>
                                         <td className="px-4 py-1.5 border-b border-slate-50 font-semibold text-slate-600 truncate">{toTitleCase(item.salesperson)}</td>
                                         <td className="px-4 py-1.5 border-b border-slate-50 font-semibold text-slate-500 truncate">{item.telecaller ? toTitleCase(item.telecaller) : <span className="text-slate-300">-</span>}</td>
