@@ -18,6 +18,7 @@ import {
   ShieldCheck,
   MapPin,
   Cpu,
+  PhoneCall,
   X
 } from 'lucide-react';
 import {
@@ -143,6 +144,7 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
         let totalRevenue = 0;
         let totalCapacity = 0;
         const bySales: Record<string, any> = {};
+        const byTelecaller: Record<string, any> = {};
         const dailyData: Record<string, any> = {};
         const weekdayMap: Record<string, number> = { "Sun":0, "Mon":0, "Tue":0, "Wed":0, "Thu":0, "Fri":0, "Sat":0 };
         const capSegments: Record<string, number> = { "< 3 kW": 0, "3 kW": 0, "3.1 - 4 kW": 0, "> 4 kW": 0 };
@@ -160,6 +162,13 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
             bySales[sp].deals += 1;
             bySales[sp].capacity += curr.capacity || 0;
 
+            if (curr.telecaller) {
+                const tc = toTitleCase(curr.telecaller.trim());
+                if (!byTelecaller[tc]) byTelecaller[tc] = { name: tc, revenue: 0, deals: 0, capacity: 0 };
+                byTelecaller[tc].revenue += curr.amount || 0;
+                byTelecaller[tc].deals += 1;
+                byTelecaller[tc].capacity += curr.capacity || 0;
+            }
 
             const d = curr.date;
             if (!dailyData[d]) dailyData[d] = { date: d, revenue: 0, deals: 0 };
@@ -191,6 +200,7 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
         });
 
         const sortedSales = Object.values(bySales).sort((a, b) => b.revenue - a.revenue);
+        const sortedTelecallers = Object.values(byTelecaller).sort((a, b) => b.revenue - a.revenue);
         const timeline = Object.values(dailyData).sort((a, b) => parseDateLocal(a.date).getTime() - parseDateLocal(b.date).getTime());
         const weekdayPerformance = Object.keys(weekdayMap).map(k => ({ name: k, revenue: weekdayMap[k] }));
         const capDist = Object.keys(capSegments).map(k => ({ name: k, value: capSegments[k] }));
@@ -213,6 +223,7 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
             weekdayPerformance,
             capDist,
             topPerformer: sortedSales[0] || null,
+            topTelecaller: sortedTelecallers[0] || null,
             topLocations,
             topBrands,
             topSystems
@@ -378,20 +389,40 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
                         </div>
                     </div>
                     
-                    <div className="bg-white p-8 print:p-6 rounded-[2.5rem] print:rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center">
-                        <div className="flex items-center gap-2 mb-4 print:mb-2">
-                            <Star className="text-amber-500 w-4 h-4" />
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Global Top Performer</span>
-                        </div>
-                        <p className="text-2xl print:text-xl font-black tracking-tight text-slate-800">{stats.topPerformer ? stats.topPerformer.name : 'N/A'}</p>
-                        <div className="mt-4 flex justify-between items-end border-t border-slate-50 pt-4 print:mt-2 print:pt-2">
-                            <div>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Revenue</p>
-                                <p className="text-sm font-black text-blue-600">{stats.topPerformer ? formatMoney(stats.topPerformer.revenue) : '₹0'}</p>
+                    <div className="flex flex-col gap-6 print:gap-4">
+                        <div className="bg-white p-6 print:p-4 rounded-[2rem] print:rounded-2xl border border-slate-100 shadow-sm flex-1 flex flex-col justify-center">
+                            <div className="flex items-center gap-2 mb-3 print:mb-2">
+                                <Star className="text-amber-500 w-4 h-4" />
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Global Top Performer</span>
                             </div>
-                            <div className="text-right">
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Deals</p>
-                                <p className="text-sm font-black text-slate-800">{stats.topPerformer ? stats.topPerformer.deals : '0'}</p>
+                            <p className="text-xl print:text-lg font-black tracking-tight text-slate-800">{stats.topPerformer ? stats.topPerformer.name : 'N/A'}</p>
+                            <div className="mt-3 flex justify-between items-end border-t border-slate-50 pt-3 print:mt-2 print:pt-2">
+                                <div>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Revenue</p>
+                                    <p className="text-xs font-black text-blue-600">{stats.topPerformer ? formatMoney(stats.topPerformer.revenue) : '₹0'}</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Deals</p>
+                                    <p className="text-xs font-black text-slate-800">{stats.topPerformer ? stats.topPerformer.deals : '0'}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-white p-6 print:p-4 rounded-[2rem] print:rounded-2xl border border-slate-100 shadow-sm flex-1 flex flex-col justify-center">
+                            <div className="flex items-center gap-2 mb-3 print:mb-2">
+                                <PhoneCall className="text-indigo-500 w-4 h-4" />
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Top Telecaller</span>
+                            </div>
+                            <p className="text-xl print:text-lg font-black tracking-tight text-slate-800">{stats.topTelecaller ? stats.topTelecaller.name : 'N/A'}</p>
+                            <div className="mt-3 flex justify-between items-end border-t border-slate-50 pt-3 print:mt-2 print:pt-2">
+                                <div>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sourced</p>
+                                    <p className="text-xs font-black text-indigo-600">{stats.topTelecaller ? formatMoney(stats.topTelecaller.revenue) : '₹0'}</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Leads</p>
+                                    <p className="text-xs font-black text-slate-800">{stats.topTelecaller ? stats.topTelecaller.deals : '0'}</p>
+                                </div>
                             </div>
                         </div>
                     </div>
