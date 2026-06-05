@@ -54,7 +54,6 @@ ChartJS.register(
 
 ChartJS.defaults.font.family = 'Inter, sans-serif';
 ChartJS.defaults.color = '#94a3b8';
-// @ts-expect-error ChartJS scale typing is incomplete
 ChartJS.defaults.scale.grid.color = '#f1f5f9';
 
 const TARGET_REVENUE = 12000000; // 1.2 Crore

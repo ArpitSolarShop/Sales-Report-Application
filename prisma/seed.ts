@@ -8,7 +8,8 @@ async function getSeedClient() {
 
 import fs from 'fs';
 import path from 'path';
-import type { PrismaClient } from '../src/generated/prisma';
+
+type PrismaClient = Awaited<ReturnType<typeof getSeedClient>>;
 
 async function main(prisma: PrismaClient) {
   console.log("🌱 Seeding database from initial_sales.tsv...");
