@@ -121,9 +121,12 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
     const stats = useMemo(() => {
         const filteredData = allData.filter(item => {
             const cleanRepName = toTitleCase(item.salesperson.trim());
+            const cleanTelecallerName = item.telecaller ? toTitleCase(item.telecaller.trim()) : "";
+            
             const matchesSearch = String(item.customer || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
-                                  cleanRepName.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesRep = !selectedRep || cleanRepName === selectedRep;
+                                  cleanRepName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                  cleanTelecallerName.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesRep = !selectedRep || cleanRepName === selectedRep || cleanTelecallerName === selectedRep;
             
             let matchesMonth = true;
             if (selectedMonth !== "All") {
@@ -156,6 +159,14 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
             bySales[sp].revenue += curr.amount || 0;
             bySales[sp].deals += 1;
             bySales[sp].capacity += curr.capacity || 0;
+
+            if (curr.telecaller) {
+                const tc = toTitleCase(curr.telecaller.trim());
+                if (!bySales[tc]) bySales[tc] = { name: tc, revenue: 0, deals: 0, capacity: 0 };
+                bySales[tc].revenue += curr.amount || 0;
+                bySales[tc].deals += 1;
+                bySales[tc].capacity += curr.capacity || 0;
+            }
 
             const d = curr.date;
             if (!dailyData[d]) dailyData[d] = { date: d, revenue: 0, deals: 0 };
