@@ -21,6 +21,7 @@ import {
   PhoneCall,
   X
 } from 'lucide-react';
+import Image from 'next/image';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -53,7 +54,7 @@ ChartJS.register(
 
 ChartJS.defaults.font.family = 'Inter, sans-serif';
 ChartJS.defaults.color = '#94a3b8';
-// @ts-ignore
+// @ts-expect-error ChartJS scale typing is incomplete
 ChartJS.defaults.scale.grid.color = '#f1f5f9';
 
 const TARGET_REVENUE = 12000000; // 1.2 Crore
@@ -116,6 +117,7 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
     }, [allData]);
 
     useEffect(() => {
+        // eslint-disable-next-line
         setCurrentDate(new Date().toLocaleDateString('en-IN'));
     }, []);
 
@@ -143,9 +145,9 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
 
         let totalRevenue = 0;
         let totalCapacity = 0;
-        const bySales: Record<string, any> = {};
-        const byTelecaller: Record<string, any> = {};
-        const dailyData: Record<string, any> = {};
+        const bySales: Record<string, { name: string, revenue: number, deals: number, capacity: number }> = {};
+        const byTelecaller: Record<string, { name: string, revenue: number, deals: number, capacity: number }> = {};
+        const dailyData: Record<string, { date: string, revenue: number, deals: number }> = {};
         const weekdayMap: Record<string, number> = { "Sun":0, "Mon":0, "Tue":0, "Wed":0, "Thu":0, "Fri":0, "Sat":0 };
         const capSegments: Record<string, number> = { "< 3 kW": 0, "3 kW": 0, "3.1 - 4 kW": 0, "> 4 kW": 0 };
         const locationMap: Record<string, {name: string, count: number}> = {};
@@ -291,8 +293,8 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
                 
                 {/* Header */}
                 <header className="flex flex-col lg:flex-row lg:justify-between lg:items-end gap-6 border-b-[3px] border-slate-900 pb-6 mb-8 pt-2 print:pt-0 print:pb-4 print:mb-6">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
-                        <img src="/krishnanuja.png" alt="Krishnanuja Renewables" className="h-16 sm:h-20 w-auto object-contain print:h-14 drop-shadow-sm" />
+                    <div className="flex items-center gap-4">
+                        <Image src="/krishnanuja.png" alt="Krishnanuja Logo" width={48} height={48} className="w-12 h-12 object-contain print:w-10 print:h-10" />
                         <div>
                             <div className="flex items-center gap-2 mb-2 print:mb-1">
                                 <Zap className="text-blue-600 print:text-slate-800 w-5 h-5" />
@@ -636,7 +638,7 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
                                 <Bar 
                                     data={{
                                         labels: [...stats.topSales].sort((a, b) => b.deals - a.deals).map(d => {
-                                            let n = String(d.name || "").trim().split(/\s+/);
+                                            const n = String(d.name || "").trim().split(/\s+/);
                                             return n.length > 1 && n[1] ? n[0] + ' ' + n[1][0] + '.' : n[0];
                                         }), 
                                         datasets: [{

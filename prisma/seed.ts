@@ -8,8 +8,9 @@ async function getSeedClient() {
 
 import fs from 'fs';
 import path from 'path';
+import type { PrismaClient } from '../src/generated/prisma';
 
-async function main(prisma: any) {
+async function main(prisma: PrismaClient) {
   console.log("🌱 Seeding database from initial_sales.tsv...");
 
   await prisma.saleItem.deleteMany();
