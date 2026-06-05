@@ -160,13 +160,6 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
             bySales[sp].deals += 1;
             bySales[sp].capacity += curr.capacity || 0;
 
-            if (curr.telecaller) {
-                const tc = toTitleCase(curr.telecaller.trim());
-                if (!bySales[tc]) bySales[tc] = { name: tc, revenue: 0, deals: 0, capacity: 0 };
-                bySales[tc].revenue += curr.amount || 0;
-                bySales[tc].deals += 1;
-                bySales[tc].capacity += curr.capacity || 0;
-            }
 
             const d = curr.date;
             if (!dailyData[d]) dailyData[d] = { date: d, revenue: 0, deals: 0 };
