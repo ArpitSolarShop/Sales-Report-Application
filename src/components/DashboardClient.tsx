@@ -79,6 +79,7 @@ type RecordData = {
     salesperson: string;
     company?: string;
     location?: string;
+    telecaller?: string;
 };
 
 export default function DashboardClient({ initialRecords }: { initialRecords: RecordData[] }) {
@@ -223,13 +224,20 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
 
             const parsed = dataToParse.map(row => {
                 const parts = row.split(/,|\t/);
+                // Try to infer index based on if the first column is S.No (a number).
+                // If it is, skip index 0. If it's not, shift indices left by 1.
+                const offset = !isNaN(Number(parts[0])) ? 1 : 0;
+                
                 return {
-                    customer: parts[0]?.trim().replace(/"/g, '') || "N/A",
-                    mobile: parts[1]?.trim() || "N/A",
-                    date: parts[2]?.trim() || "2026-05-01", 
-                    capacity: parseFloat(parts[3]) || 0,
-                    amount: parseFloat(parts[4]) || 0,
-                    salesperson: (parts[5]?.trim() || "Unknown").replace(/\s+$/, '')
+                    customer: parts[offset]?.trim().replace(/"/g, '') || "N/A",
+                    salesperson: parts[offset+1]?.trim() || "Unknown",
+                    mobile: parts[offset+2]?.trim() || "N/A",
+                    capacity: parseFloat(parts[offset+3]) || 0,
+                    company: parts[offset+4]?.trim() || "Unknown",
+                    location: parts[offset+5]?.trim() || "Unknown",
+                    amount: parseFloat((parts[offset+6] || "0").replace(/,/g, '')) || 0,
+                    date: parts[offset+7]?.trim() || "2026-05-01",
+                    telecaller: parts[offset+8]?.trim() || undefined
                 };
             });
 
@@ -631,10 +639,11 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
                         <table className="w-full text-left table-fixed">
                             <thead className="bg-slate-50 text-[9px] uppercase text-slate-400 font-black sticky top-0 z-20">
                                 <tr>
-                                    <th className="px-4 py-2 w-1/3">Client Profile</th>
-                                    <th className="px-4 py-2 w-1/4">Executive</th>
-                                    <th className="px-4 py-2 w-1/6 text-center">kW</th>
-                                    <th className="px-4 py-2 w-1/4 text-right">Invoice</th>
+                                    <th className="px-4 py-2 w-[28%]">Client Profile</th>
+                                    <th className="px-4 py-2 w-[22%]">Executive</th>
+                                    <th className="px-4 py-2 w-[20%]">Telecaller</th>
+                                    <th className="px-4 py-2 w-[12%] text-center">kW</th>
+                                    <th className="px-4 py-2 w-[18%] text-right">Invoice</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 text-[10px]">
@@ -645,6 +654,7 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
                                             <div className="text-[8px] text-slate-400">{item.mobile} • {item.date}</div>
                                         </td>
                                         <td className="px-4 py-1.5 border-b border-slate-50 font-semibold text-slate-600 truncate">{toTitleCase(item.salesperson)}</td>
+                                        <td className="px-4 py-1.5 border-b border-slate-50 font-semibold text-slate-500 truncate">{item.telecaller ? toTitleCase(item.telecaller) : <span className="text-slate-300">-</span>}</td>
                                         <td className="px-4 py-1.5 border-b border-slate-50 text-center font-black text-blue-600">{item.capacity}</td>
                                         <td className="px-4 py-1.5 border-b border-slate-50 text-right font-black text-slate-900">{formatMoney(item.amount)}</td>
                                     </tr>

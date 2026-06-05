@@ -24,7 +24,8 @@ export default async function Page() {
       company: sale.customer.company || "Unknown",
       location: sale.customer.address || "Unknown",
       amount: sale.totalAmount,
-      salesperson: sale.agent.name
+      salesperson: sale.agent.name,
+      telecaller: sale.telecaller || undefined
     };
   });
 

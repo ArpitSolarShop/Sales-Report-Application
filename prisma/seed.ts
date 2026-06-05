@@ -36,7 +36,8 @@ async function main(prisma: any) {
   const rawData = fs.readFileSync(tsvPath, 'utf8');
 
   const lines = rawData.trim().split('\n');
-  for (const line of lines) {
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
     const parts = line.split('\t');
     if (parts.length < 9) continue;
     
@@ -55,6 +56,8 @@ async function main(prisma: any) {
     if (dateParts.length === 3) {
       saleDate = new Date(`${dateParts[2]}-${dateParts[1]}-${dateParts[0]}T12:00:00Z`);
     }
+
+    const telecaller = parts.length > 9 ? parts[9].trim() : null;
 
     let agentId = agentsMap.get(salespersonName);
     if (!agentId) {
@@ -101,6 +104,7 @@ async function main(prisma: any) {
             saleDate: saleDate,
             agentId: agentId,
             customerId: customerId,
+            telecaller: telecaller || null,
             notes: `Capacity: ${capacity} kW | Company: ${company} | Location: ${location}`,
             items: {
                 create: [{

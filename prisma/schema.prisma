@@ -61,6 +61,7 @@ model Sale {
   netAmount     Float
   paymentMethod String?    // cash, card, upi, bank_transfer
   notes         String?
+  telecaller    String?
   saleDate      DateTime   @default(now())
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
