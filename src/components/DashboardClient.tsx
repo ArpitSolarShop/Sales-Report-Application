@@ -220,6 +220,7 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
             revenuePerKw: totalCapacity ? (totalRevenue / totalCapacity) : 0,
             dealCount,
             topSales: sortedSales,
+            sortedTelecallers,
             timeline,
             weekdayPerformance,
             capDist,
@@ -695,6 +696,42 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
                                 </div>
                             ))}
                         </div>
+                    </div>
+
+                    {/* Telecaller Rankings */}
+                    <div className="bg-white p-6 print:p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col">
+                        <h3 className="text-sm font-bold mb-4 flex items-center gap-2 text-slate-700">
+                            <PhoneCall className="text-emerald-500 w-4 h-4" /> Telecaller Rankings
+                        </h3>
+                        {stats.sortedTelecallers.length > 0 ? (
+                            <div className="space-y-2 flex-1 w-full overflow-y-auto custom-scrollbar print:max-h-none print:overflow-visible max-h-[400px]">
+                                {stats.sortedTelecallers.map((tc, i) => {
+                                    const maxTcRev = stats.sortedTelecallers[0] ? stats.sortedTelecallers[0].revenue : 1;
+                                    return (
+                                        <div 
+                                            key={i}
+                                            onClick={() => setSelectedRep(selectedRep === tc.name ? null : tc.name)} 
+                                            className={`group cursor-pointer p-2 rounded-xl transition-all border ${selectedRep === tc.name ? 'bg-emerald-50 border-emerald-200 shadow-sm' : 'border-slate-50 hover:border-slate-200'} print:p-1.5`}
+                                        >
+                                            <div className="flex justify-between items-center mb-1">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[11px] font-bold text-slate-700">{tc.name}</span>
+                                                    <span className="text-[9px] font-bold text-slate-500 bg-slate-100 px-1.5 rounded-sm">{tc.deals} deals</span>
+                                                </div>
+                                                <span className="text-[10px] font-black text-emerald-600">{formatMoney(tc.revenue)}</span>
+                                            </div>
+                                            <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                                                <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${(tc.revenue / maxTcRev) * 100}%` }}></div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            <div className="flex-1 flex items-center justify-center">
+                                <p className="text-xs text-slate-400 italic">No telecaller data for this period</p>
+                            </div>
+                        )}
                     </div>
                 </div>
 
