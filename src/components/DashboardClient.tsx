@@ -302,17 +302,71 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
     const peakDateStr = stats.timeline.length ? [...stats.timeline].sort((a,b) => b.revenue - a.revenue)[0].date : 'N/A';
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-blue-100 pb-20 print:bg-slate-50 print:p-0 print:pb-0">
+        <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-blue-100 pb-20 print:bg-white print:p-0 print:pb-0">
             <style dangerouslySetInnerHTML={{__html: `
                 @media print {
-                    @page { size: landscape; margin: 10mm; }
-                    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-                    .bg-white { break-inside: avoid; page-break-inside: avoid; }
-                    /* Force layout retention for print */
+                    @page { 
+                        size: A4 portrait; 
+                        margin: 10mm; 
+                    }
+                    html, body { 
+                        background-color: #ffffff !important; 
+                        font-size: 11px !important;
+                        -webkit-print-color-adjust: exact !important; 
+                        print-color-adjust: exact !important; 
+                        width: 100% !important;
+                    }
+                    * { 
+                        -webkit-print-color-adjust: exact !important; 
+                        print-color-adjust: exact !important; 
+                        box-sizing: border-box !important;
+                    }
+                    .bg-white { 
+                        box-shadow: none !important; 
+                        border: 1px solid #e2e8f0 !important;
+                        break-inside: avoid !important;
+                        page-break-inside: avoid !important;
+                    }
+                    .print\\:hidden { display: none !important; }
+
+                    /* Force clean multi-column layouts */
                     .lg\\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
                     .lg\\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
                     .lg\\:col-span-2 { grid-column: span 2 / span 2 !important; }
-                    .print\\:hidden { display: none !important; }
+                    .print\\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+                    .print\\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+
+                    /* Canvas styling to prevent overflow or overlapping */
+                    canvas {
+                        max-width: 100% !important;
+                        max-height: 100% !important;
+                        height: auto !important;
+                        display: block !important;
+                    }
+
+                    /* Allow rankings and tables to expand naturally in print without scrollbars */
+                    .custom-scrollbar { 
+                        max-height: none !important; 
+                        overflow: visible !important; 
+                    }
+
+                    /* Table print pagination rules */
+                    .print-page-break {
+                        page-break-before: always !important;
+                        break-before: page !important;
+                        margin-top: 1.5rem !important;
+                    }
+                    table {
+                        width: 100% !important;
+                        page-break-inside: auto !important;
+                    }
+                    tr {
+                        page-break-inside: avoid !important;
+                        break-inside: avoid !important;
+                    }
+                    thead {
+                        display: table-header-group !important;
+                    }
                 }
             `}} />
             <main className="max-w-7xl mx-auto p-4 md:p-6 space-y-6 print:space-y-6 print:p-4 print:max-w-none">
@@ -537,11 +591,11 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
                     <div className="lg:col-span-2 space-y-6 print:space-y-4">
                         
                         {/* Timeline */}
-                        <div className="bg-white p-6 print:p-4 rounded-2xl border border-slate-100 shadow-sm h-[300px] print:h-[220px] flex flex-col">
+                        <div className="bg-white p-6 print:p-4 rounded-2xl border border-slate-100 shadow-sm h-[300px] print:h-[200px] flex flex-col overflow-hidden">
                             <h3 className="text-sm font-bold flex items-center gap-2 mb-2 uppercase tracking-wider text-slate-400 shrink-0">
                                 <Activity className="text-blue-500 w-4 h-4" /> Revenue Flux
                             </h3>
-                            <div className="flex-1 relative w-full h-full">
+                            <div className="flex-1 relative w-full h-full min-h-0">
                                 <Line 
                                     data={{
                                         labels: stats.timeline.map(d => d.date.split('-').slice(1).join('/')),
@@ -590,11 +644,11 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 print:gap-4">
-                            <div className="bg-white p-6 print:p-4 rounded-2xl border border-slate-100 shadow-sm h-[200px] print:h-[150px] flex flex-col">
+                            <div className="bg-white p-6 print:p-4 rounded-2xl border border-slate-100 shadow-sm h-[200px] print:h-[150px] flex flex-col overflow-hidden">
                                 <h3 className="text-[10px] font-black mb-2 flex items-center gap-2 text-slate-400 uppercase tracking-widest shrink-0">
                                     <BarChart3 className="w-3 h-3" /> Weekday Flow
                                 </h3>
-                                <div className="flex-1 relative w-full h-full">
+                                <div className="flex-1 relative w-full h-full min-h-0">
                                     <Bar 
                                         data={{
                                             labels: stats.weekdayPerformance.map(d => d.name),
@@ -623,11 +677,11 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
                                     />
                                 </div>
                             </div>
-                            <div className="bg-white p-6 print:p-4 rounded-2xl border border-slate-100 shadow-sm h-[200px] print:h-[150px] flex flex-col">
+                            <div className="bg-white p-6 print:p-4 rounded-2xl border border-slate-100 shadow-sm h-[200px] print:h-[150px] flex flex-col overflow-hidden">
                                 <h3 className="text-[10px] font-black mb-2 flex items-center gap-2 text-slate-400 uppercase tracking-widest shrink-0">
                                     <Package className="w-3 h-3" /> Capacity Segments
                                 </h3>
-                                <div className="flex-1 relative w-full h-full">
+                                <div className="flex-1 relative w-full h-full min-h-0">
                                     <Doughnut 
                                         data={{
                                             labels: stats.capDist.map(d => d.name),
@@ -656,11 +710,11 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
                         </div>
 
                         {/* Systems Sold by Executive Chart */}
-                        <div className="bg-white p-6 print:p-4 rounded-2xl border border-slate-100 shadow-sm h-[220px] print:h-[160px] flex flex-col">
+                        <div className="bg-white p-6 print:p-4 rounded-2xl border border-slate-100 shadow-sm h-[220px] print:h-[160px] flex flex-col overflow-hidden">
                             <h3 className="text-[10px] font-black mb-2 flex items-center gap-2 text-slate-400 uppercase tracking-widest shrink-0">
                                 <Users className="w-3 h-3" /> Systems Sold by Executive
                             </h3>
-                            <div className="flex-1 relative w-full h-full">
+                            <div className="flex-1 relative w-full h-full min-h-0">
                                 <Bar 
                                     data={{
                                         labels: [...stats.topSales].sort((a, b) => b.deals - a.deals).map(d => {
@@ -697,72 +751,75 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
                         </div>
                     </div>
 
-                    {/* Leaderboard */}
-                    <div className="bg-white p-6 print:p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col">
-                        <h3 className="text-sm font-bold mb-4 flex items-center gap-2 text-slate-700">
-                            <Award className="text-amber-500 w-4 h-4" /> Force Rankings
-                        </h3>
-                        <div className="space-y-2 flex-1 w-full overflow-y-auto custom-scrollbar print:max-h-none print:overflow-visible max-h-[750px]">
-                            {stats.topSales.map((sp, i) => (
-                                <div 
-                                    key={i}
-                                    onClick={() => setSelectedRep(selectedRep === sp.name ? null : sp.name)} 
-                                    className={`group cursor-pointer p-2 rounded-xl transition-all border ${selectedRep === sp.name ? 'bg-blue-50 border-blue-200 shadow-sm' : 'border-slate-50 hover:border-slate-200'} print:p-1.5`}
-                                >
-                                    <div className="flex justify-between items-center mb-1">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-[11px] font-bold text-slate-700">{sp.name}</span>
-                                            <span className="text-[9px] font-bold text-slate-500 bg-slate-100 px-1.5 rounded-sm">{sp.deals} deals</span>
+                    {/* Right Column: Force Rankings & Telecaller Rankings */}
+                    <div className="space-y-6 print:space-y-4 flex flex-col">
+                        {/* Leaderboard */}
+                        <div className="bg-white p-6 print:p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col">
+                            <h3 className="text-sm font-bold mb-4 flex items-center gap-2 text-slate-700">
+                                <Award className="text-amber-500 w-4 h-4" /> Force Rankings
+                            </h3>
+                            <div className="space-y-2 flex-1 w-full overflow-y-auto custom-scrollbar print:max-h-none print:overflow-visible max-h-[750px]">
+                                {stats.topSales.map((sp, i) => (
+                                    <div 
+                                        key={i}
+                                        onClick={() => setSelectedRep(selectedRep === sp.name ? null : sp.name)} 
+                                        className={`group cursor-pointer p-2 rounded-xl transition-all border ${selectedRep === sp.name ? 'bg-blue-50 border-blue-200 shadow-sm' : 'border-slate-50 hover:border-slate-200'} print:p-1.5`}
+                                    >
+                                        <div className="flex justify-between items-center mb-1">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[11px] font-bold text-slate-700">{sp.name}</span>
+                                                <span className="text-[9px] font-bold text-slate-500 bg-slate-100 px-1.5 rounded-sm">{sp.deals} deals</span>
+                                            </div>
+                                            <span className="text-[10px] font-black text-blue-600">{formatMoney(sp.revenue)}</span>
                                         </div>
-                                        <span className="text-[10px] font-black text-blue-600">{formatMoney(sp.revenue)}</span>
+                                        <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                                            <div className="h-full bg-blue-500 rounded-full" style={{ width: `${(sp.revenue / maxRev) * 100}%` }}></div>
+                                        </div>
                                     </div>
-                                    <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                                        <div className="h-full bg-blue-500 rounded-full" style={{ width: `${(sp.revenue / maxRev) * 100}%` }}></div>
-                                    </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
-                    </div>
 
-                    {/* Telecaller Rankings */}
-                    <div className="bg-white p-6 print:p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col">
-                        <h3 className="text-sm font-bold mb-4 flex items-center gap-2 text-slate-700">
-                            <PhoneCall className="text-emerald-500 w-4 h-4" /> Telecaller Rankings
-                        </h3>
-                        {stats.sortedTelecallers.length > 0 ? (
-                            <div className="space-y-2 flex-1 w-full overflow-y-auto custom-scrollbar print:max-h-none print:overflow-visible max-h-[400px]">
-                                {stats.sortedTelecallers.map((tc, i) => {
-                                    const maxTcRev = stats.sortedTelecallers[0] ? stats.sortedTelecallers[0].revenue : 1;
-                                    return (
-                                        <div 
-                                            key={i}
-                                            onClick={() => setSelectedRep(selectedRep === tc.name ? null : tc.name)} 
-                                            className={`group cursor-pointer p-2 rounded-xl transition-all border ${selectedRep === tc.name ? 'bg-emerald-50 border-emerald-200 shadow-sm' : 'border-slate-50 hover:border-slate-200'} print:p-1.5`}
-                                        >
-                                            <div className="flex justify-between items-center mb-1">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[11px] font-bold text-slate-700">{tc.name}</span>
-                                                    <span className="text-[9px] font-bold text-slate-500 bg-slate-100 px-1.5 rounded-sm">{tc.deals} deals</span>
+                        {/* Telecaller Rankings */}
+                        <div className="bg-white p-6 print:p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col">
+                            <h3 className="text-sm font-bold mb-4 flex items-center gap-2 text-slate-700">
+                                <PhoneCall className="text-emerald-500 w-4 h-4" /> Telecaller Rankings
+                            </h3>
+                            {stats.sortedTelecallers.length > 0 ? (
+                                <div className="space-y-2 flex-1 w-full overflow-y-auto custom-scrollbar print:max-h-none print:overflow-visible max-h-[400px]">
+                                    {stats.sortedTelecallers.map((tc, i) => {
+                                        const maxTcRev = stats.sortedTelecallers[0] ? stats.sortedTelecallers[0].revenue : 1;
+                                        return (
+                                            <div 
+                                                key={i}
+                                                onClick={() => setSelectedRep(selectedRep === tc.name ? null : tc.name)} 
+                                                className={`group cursor-pointer p-2 rounded-xl transition-all border ${selectedRep === tc.name ? 'bg-emerald-50 border-emerald-200 shadow-sm' : 'border-slate-50 hover:border-slate-200'} print:p-1.5`}
+                                            >
+                                                <div className="flex justify-between items-center mb-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-[11px] font-bold text-slate-700">{tc.name}</span>
+                                                        <span className="text-[9px] font-bold text-slate-500 bg-slate-100 px-1.5 rounded-sm">{tc.deals} deals</span>
+                                                    </div>
+                                                    <span className="text-[10px] font-black text-emerald-600">{formatMoney(tc.revenue)}</span>
                                                 </div>
-                                                <span className="text-[10px] font-black text-emerald-600">{formatMoney(tc.revenue)}</span>
+                                                <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                                                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${(tc.revenue / maxTcRev) * 100}%` }}></div>
+                                                </div>
                                             </div>
-                                            <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                                                <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${(tc.revenue / maxTcRev) * 100}%` }}></div>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        ) : (
-                            <div className="flex-1 flex items-center justify-center">
-                                <p className="text-xs text-slate-400 italic">No telecaller data for this period</p>
-                            </div>
-                        )}
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div className="flex-1 flex items-center justify-center">
+                                    <p className="text-xs text-slate-400 italic">No telecaller data for this period</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 
                 {/* Audit Table */}
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden print:shadow-none">
+                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden print:shadow-none print-page-break">
                     <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10 print:p-2">
                         <div className="flex items-center gap-3">
                             <ShieldCheck className="text-emerald-500 w-5 h-5" />
