@@ -64,6 +64,32 @@ const toTitleCase = (str: string) => {
     return str.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
 };
 
+const normalizeSalesperson = (str: string) => {
+    if (!str) return "UNKNOWN";
+    const s = str.trim().toUpperCase().replace(/\s+/g, " ");
+
+    if (/ANMOL/i.test(s)) return "ANMOL UPADHYAY";
+    if (/SATISH/i.test(s) && (/MAUR/i.test(s) || /MOUR/i.test(s) || /MORY/i.test(s))) return "SATISH MAURYA";
+    if (/MAN[OJ|JO]+.*CHAUB/i.test(s)) return "MANOJ CHAUBEY";
+    if (/VIKA.*VI.*W/i.test(s)) return "VIKASH VISHWAKARMA";
+    if (/ADITYA.*NARAYAN/i.test(s)) return "ADITYA NARAYAN";
+    if (/SANDEEP.*CHATUR/i.test(s)) return "SANDEEP CHATURVEDI";
+    if (/SANDEEP.*CHAUB/i.test(s)) return "SANDEEP CHAUBEY";
+    if (/AMBUJ.*CHAUB/i.test(s)) return "AMBUJ CHAUBEY";
+    if (/DEEPAK.*PANDEY/i.test(s)) return "DEEPAK PANDEY";
+    if (/ASHISH.*UPADHYAY/i.test(s)) return "ASHISH UPADHYAY";
+    if (/RAHUL.*MISHRA/i.test(s)) return "RAHUL MISHRA";
+    if (/RAHUL.*SIR/i.test(s)) return "RAHUL SIR";
+    if (/RAJEEV.*TRIPATHI/i.test(s)) return "RAJEEV TRIPATHI";
+    if (/PRASHANT.*SINGH/i.test(s)) return "PRASHANT SINGH";
+    if (/NITESH.*PANDEY/i.test(s)) return "NITESH PANDEY";
+    if (/BAMPI.*TIWARI/i.test(s)) return "BAMPI TIWARI";
+    if (/VIPIN.*SHARMA/i.test(s) || /VIPIN.*JI/i.test(s)) return "VIPIN SHARMA";
+    if (/DEEPAK.*VERMA/i.test(s)) return "DEEPAK VERMA";
+
+    return s;
+};
+
 const parseDateLocal = (dateStr: string) => {
     if (!dateStr) return new Date(NaN);
     const [y, m, d] = dateStr.split('-');
@@ -122,7 +148,7 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
 
     const stats = useMemo(() => {
         const filteredData = allData.filter(item => {
-            const cleanRepName = toTitleCase(item.salesperson.trim());
+            const cleanRepName = normalizeSalesperson(item.salesperson);
             const cleanTelecallerName = item.telecaller ? toTitleCase(item.telecaller.trim()) : "";
             
             const matchesSearch = String(item.customer || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -157,7 +183,7 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
             totalRevenue += curr.amount || 0;
             totalCapacity += curr.capacity || 0;
 
-            const sp = toTitleCase(curr.salesperson || "Unknown");
+            const sp = normalizeSalesperson(curr.salesperson || "Unknown");
             if (!bySales[sp]) bySales[sp] = { name: sp, revenue: 0, deals: 0, capacity: 0 };
             bySales[sp].revenue += curr.amount || 0;
             bySales[sp].deals += 1;
@@ -762,7 +788,7 @@ export default function DashboardClient({ initialRecords }: { initialRecords: Re
                                             <div className="font-bold text-slate-800 truncate">{item.customer}</div>
                                             <div className="text-[8px] text-slate-400">{item.mobile} • {item.date} • <span className="text-blue-500 font-bold uppercase">{item.location}</span></div>
                                         </td>
-                                        <td className="px-4 py-1.5 border-b border-slate-50 font-semibold text-slate-600 truncate">{toTitleCase(item.salesperson)}</td>
+                                        <td className="px-4 py-1.5 border-b border-slate-50 font-semibold text-slate-600 truncate">{normalizeSalesperson(item.salesperson)}</td>
                                         <td className="px-4 py-1.5 border-b border-slate-50 font-semibold text-slate-500 truncate">{item.telecaller ? toTitleCase(item.telecaller) : <span className="text-slate-300">-</span>}</td>
                                         <td className="px-4 py-1.5 border-b border-slate-50 text-center font-black text-blue-600">{item.capacity}</td>
                                         <td className="px-4 py-1.5 border-b border-slate-50 text-right font-black text-slate-900">{formatMoney(item.amount)}</td>

@@ -37,6 +37,32 @@ async function main(prisma: PrismaClient) {
   const tsvPath = path.join(__dirname, 'initial_sales.tsv');
   const rawData = fs.readFileSync(tsvPath, 'utf8');
 
+  function normalizeSalesperson(name: string): string {
+    if (!name) return "UNKNOWN";
+    const s = name.trim().toUpperCase().replace(/\s+/g, " ");
+
+    if (/ANMOL/i.test(s)) return "ANMOL UPADHYAY";
+    if (/SATISH/i.test(s) && (/MAUR/i.test(s) || /MOUR/i.test(s) || /MORY/i.test(s))) return "SATISH MAURYA";
+    if (/MAN[OJ|JO]+.*CHAUB/i.test(s)) return "MANOJ CHAUBEY";
+    if (/VIKA.*VI.*W/i.test(s)) return "VIKASH VISHWAKARMA";
+    if (/ADITYA.*NARAYAN/i.test(s)) return "ADITYA NARAYAN";
+    if (/SANDEEP.*CHATUR/i.test(s)) return "SANDEEP CHATURVEDI";
+    if (/SANDEEP.*CHAUB/i.test(s)) return "SANDEEP CHAUBEY";
+    if (/AMBUJ.*CHAUB/i.test(s)) return "AMBUJ CHAUBEY";
+    if (/DEEPAK.*PANDEY/i.test(s)) return "DEEPAK PANDEY";
+    if (/ASHISH.*UPADHYAY/i.test(s)) return "ASHISH UPADHYAY";
+    if (/RAHUL.*MISHRA/i.test(s)) return "RAHUL MISHRA";
+    if (/RAHUL.*SIR/i.test(s)) return "RAHUL SIR";
+    if (/RAJEEV.*TRIPATHI/i.test(s)) return "RAJEEV TRIPATHI";
+    if (/PRASHANT.*SINGH/i.test(s)) return "PRASHANT SINGH";
+    if (/NITESH.*PANDEY/i.test(s)) return "NITESH PANDEY";
+    if (/BAMPI.*TIWARI/i.test(s)) return "BAMPI TIWARI";
+    if (/VIPIN.*SHARMA/i.test(s) || /VIPIN.*JI/i.test(s)) return "VIPIN SHARMA";
+    if (/DEEPAK.*VERMA/i.test(s)) return "DEEPAK VERMA";
+
+    return s;
+  }
+
   const lines = rawData.trim().split('\n');
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i];
@@ -44,7 +70,8 @@ async function main(prisma: PrismaClient) {
     if (parts.length < 9) continue;
     
     const customerName = parts[1].trim();
-    const salespersonName = parts[2].trim();
+    const rawSalesperson = parts[2].trim();
+    const salespersonName = normalizeSalesperson(rawSalesperson);
     const mobile = parts[3].trim();
     const capacity = parseFloat(parts[4].trim());
     const company = parts[5].trim();
